@@ -1,7 +1,10 @@
 import os
 import json
 import argparse
-from colorama import init, Fore, Style, Back
+from rich import print
+from rich.panel import Panel
+from rich.console import Console
+from rich.style import Style
 import anthropic
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
@@ -28,6 +31,8 @@ DEFAULT_SYSTEM_MESSAGE = """
 
 By following these guidelines, you can provide an effective, efficient, and professional troubleshooting collaboration experience tailored to the user's needs."
 """
+
+console = Console()
 
 
 def save_conversation_history(conversation_history, file_path):
@@ -72,7 +77,7 @@ def generate_conversation_name(first_message):
     )
 
     content_text = " ".join(block.text for block in response.content)
-    print_colored(f"Title: {content_text}", fore_color=Fore.GREEN)
+    console.print(Panel(f"Title: {content_text}", style="green"))
     conversation_name = content_text.replace(" ", "_").replace(".", "")
     return conversation_name
 
@@ -128,16 +133,7 @@ def reset_conversation():
     if current_conversation_file:
         os.remove(os.path.join(CONVERSATIONS_DIRECTORY, current_conversation_file))
         set_current_conversation_file("")
-    print("Conversation reset.")
-
-
-init()  # Initialize colorama
-
-
-def print_colored(
-    text, fore_color=Fore.RESET, back_color=Back.RESET, style=Style.NORMAL
-):
-    print(f"{fore_color}{back_color}{style}{text}{Style.RESET_ALL}")
+    console.print("Conversation reset.")
 
 
 def main():
@@ -181,21 +177,16 @@ def main():
     if args.command == "chat":
         role, response = invoke_conversation(args.message)
         if role == "assistant":
-            print_colored("Assistant:", fore_color=Fore.BLUE, style=Style.BRIGHT)
-            print_colored(response, fore_color=Fore.BLUE, style=Style.NORMAL)
+            console.print(
+                Panel(response, title="Assistant", expand=False, style="blue")
+            )
         else:
-            print_colored("User:", fore_color=Fore.MAGENTA, style=Style.BRIGHT)
-            print_colored(response, fore_color=Fore.MAGENTA, style=Style.NORMAL)
+            console.print(Panel(response, title="User", expand=False, style="magenta"))
 
     elif args.command == "reset":
         reset_conversation()
-    # elif args.command == "write":
-    #     write_conversation(args.name, args.directory)
-    # elif args.command == "import":
-    #     import_conversation(args.file_path)
     elif args.command == "history":
-        # display_conversation_history in a human-readable format
-        print("Conversation history:")
+        console.print("Conversation history:")
         current_conversation_file = get_current_conversation_file()
         if current_conversation_file:
             conversation_history = load_conversation_history(
@@ -205,20 +196,15 @@ def main():
                 role = message["role"]
                 content = message["content"]
                 if role == "assistant":
-                    print_colored(
-                        "Assistant:", fore_color=Fore.BLUE, style=Style.BRIGHT
+                    console.print(
+                        Panel(content, title="Assistant", expand=False, style="blue")
                     )
-                    print_colored(content, fore_color=Fore.BLUE, style=Style.NORMAL)
                 else:
-                    print_colored("User:", fore_color=Fore.MAGENTA, style=Style.BRIGHT)
-                    print_colored(content, fore_color=Fore.MAGENTA, style=Style.NORMAL)
-                print()
-                print_colored(
-                    "*************", fore_color=Fore.YELLOW, style=Style.BRIGHT
-                )
-                print()
+                    console.print(
+                        Panel(content, title="User", expand=False, style="magenta")
+                    )
         else:
-            print("No conversation history available.")
+            console.print("No conversation history available.")
 
 
 if __name__ == "__main__":
