@@ -1,13 +1,10 @@
 from datetime import datetime
-import markdown
 from rich.console import Console
 from rich.style import Style
 from rich.syntax import Syntax
 
-# from rich.table import Table
 from rich.progress import Progress
 from rich.markdown import Markdown
-# from rich.panel import Panel
 
 console = Console()
 
@@ -18,17 +15,8 @@ title_style = Style(
 user_style = Style(color="magenta")
 assistant_style = Style(color="#7dcfff")
 
-user_avatar = "😊"
-assistant_avatar = "🤖"
-
 
 def format_user_message(message):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    # user_text = Align(
-    #     Text(f"{user_avatar} {message}\n", style=user_style),
-    #     # + Text(timestamp, style="dim"),
-    #     align="right",
-    # )
     console.print(Markdown(message, style=user_style, code_theme="ansi_dark"))
 
 
@@ -42,7 +30,9 @@ def format_assistant_message(message):
             if in_code_block:
                 # End of code block
                 code_block = "\n".join(code_block_lines)
-                syntax = Syntax(code_block, "python", line_numbers=False)
+                syntax = Syntax(
+                    code_block, language, line_numbers=False, word_wrap=True
+                )
                 console.print(syntax)
                 code_block_lines = []
                 in_code_block = False
@@ -70,13 +60,6 @@ def format_conversation_title(title):
 def format_code_block(code, language):
     syntax = Syntax(code, language, line_numbers=True)
     console.print(syntax)
-
-
-# def format_table(data, header):
-#     table = Table(header=header)
-#     for row in data:
-#         table.add_row(*row)
-#     console.print(table)
 
 
 def format_progress(total, current, description):
