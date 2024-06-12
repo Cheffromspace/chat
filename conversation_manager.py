@@ -9,6 +9,7 @@ from formatting import format_conversation_title
 from anthropic_api import invoke_anthropic_api
 from user_config import load_user_config
 from system_prompts import SYSTEM_PROMPTS
+from utils import extract_response_text
 
 
 def invoke_conversation(
@@ -52,17 +53,47 @@ def generate_conversation_name(first_message):
     conversation_history = [
         {
             "role": "user",
-            "content": f"<instructions>Summarize the following message in 10 words or fewer. Use no punctuation. Focus on the user's instructions, pay less attention to code snippets. This will be used to create a file name so please create a memorable title in a suitable format. Return alphanumeric characters and spaces only. Don't reference the instructions within these tags:</instructions>\n\n<first_message>{first_message}</first_message>",
+            "content": f"<first_user_message>\n{first_message}\n</first_user_message>\nRemember your system message. Output only the filename enclosed in filename tags.",
         }
     ]
+
+    system_message = """
+You will be provided with the first user message in a chat session with an LLM. We're going to save this conversation to the filesystem and we want to create a meaningful name so we can refrence it and continue a conversation later if we choose. Please create a short filename, 3-7 words maximum, that describes the user's query. Focus more on the user's query or issue 
+than any supporting documentation or code.
+
+<example_output>
+<filename>guide_to_creating_README_for_project</filename>
+</example_output>
+<example_output>
+  <filename>troubleshooting_a_broken_user_config_file</filename>
+</example_output>
+<example_output>
+  <filename>requesting_interaction_analysis</filename>
+</example_output>
+<example_output>
+  <filename>occams_razor_simplest_explanation_principle</filename>
+</example_output>
+<example_output>
+  <filename>setting_up_local_webserver</filename><
+</example_output>
+<example_output>
+  <filename>summarize_rich_library_documentation</filename>
+</example_output>
+<example_output>
+  <filename>healthy_dinner_ideas</filename>
+</example_output>
+Your output should be only a filename enclosed in <filename>...</filename> tags.
+    """
 
     content_text = invoke_anthropic_api(
         conversation_history,
         model="claude-3-haiku-20240307",
-        temperature=0.7,
-        system_message="Generate a concise summary of the given message.",
+        temperature=1.0,
+        system_message=system_message,
     )
-    truncated_message = content_text[:100]
+    extracted_text = extract_response_text(content_text, "filename")
+
+    truncated_message = extracted_text[:100]
     format_conversation_title(truncated_message)
     conversation_name = truncated_message.replace(" ", "_").replace(".", "")
     return conversation_name

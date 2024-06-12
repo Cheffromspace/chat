@@ -1,8 +1,7 @@
-from datetime import datetime
 from rich.console import Console
 from rich.style import Style
 from rich.syntax import Syntax
-
+from rich.text import Text
 from rich.progress import Progress
 from rich.markdown import Markdown
 
@@ -24,6 +23,8 @@ def format_assistant_message(message):
     lines = message.split("\n")
     in_code_block = False
     code_block_lines = []
+    language = "python"
+    formatted_lines = []
 
     for line in lines:
         if line.startswith("```"):
@@ -43,14 +44,25 @@ def format_assistant_message(message):
                     3:
                 ].strip()  # Extract the language from the code block delimiter
                 if not language:
-                    language = (
-                        "python"  # Default to 'python' if no language is specified
-                    )
+                    language = "python"
         else:
             if in_code_block:
                 code_block_lines.append(line)
             else:
-                console.print(line, style=assistant_style, highlight=False)
+                # Format inline code
+                formatted_line = Text()
+                parts = line.split("`")
+                for i, part in enumerate(parts):
+                    if i % 2 == 0:
+                        formatted_line.append(part)
+                    else:
+                        formatted_line.append(Text(part, style="bold yellow"))
+                formatted_line.append(
+                    "\n"
+                )  # Add a line break after each formatted line
+                formatted_lines.append(formatted_line)
+
+            console.print(*formatted_lines, style=assistant_style, highlight=False)
 
 
 def format_conversation_title(title):

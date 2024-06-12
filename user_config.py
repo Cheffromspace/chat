@@ -5,7 +5,7 @@ CONFIG_FILE = ".chat_config.json"
 
 
 def load_user_config():
-    home_dir = Path.home()
+    home_dir = Path(Path.home())  # Convert the string to a Path object
     config_file = home_dir / CONFIG_FILE
 
     if config_file.exists():

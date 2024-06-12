@@ -2,7 +2,6 @@ from rich.console import Console
 from rich.table import Table
 from conversation_history import (
     reset_conversation,
-    write_conversation,
     display_conversation_history,
     import_conversation,
 )
@@ -58,29 +57,13 @@ def main():
     elif args.command == "reset":
         reset_conversation()
 
-    elif args.command == "write":
-        conversation_name = args.name
-        conversation_directory = args.directory
-        conversation_path = write_conversation(
-            conversation_name, conversation_directory
-        )
-        if conversation_path:
-            console.print(f"Conversation saved to: {conversation_path}")
-        else:
-            console.print("No conversation history available to save.")
-
     elif args.command == "history":
         console.print("Conversation history:")
-        conversation_history = display_conversation_history(args.raw)
-        if not conversation_history:
-            console.print("No conversation history available.")
+        display_conversation_history(args.raw)
 
     elif args.command == "import":
         conversation_name = args.conversation_name
-        conversation_directory = args.directory
-        imported_conversation = import_conversation(
-            conversation_name, conversation_directory
-        )
+        imported_conversation = import_conversation(conversation_name)
         if imported_conversation:
             console.print(f"Imported conversation: {imported_conversation}")
         else:
